@@ -1,5 +1,5 @@
 name = Breaktag
-description = Custom module for to prevent teaser break tags being stripped out.
+description = Custom module to prevent teaser break tags being stripped from filtered HTML input
 core = 7.x
 package = Custom
 files[] = breaktag.module
