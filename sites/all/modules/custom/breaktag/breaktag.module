@@ -1,0 +1,25 @@
+<?php
+/**
+* Implements hook_filter_info().
+*/
+function breaktag_filter_info() {
+  $filters = array();
+  $filters['mangle-break'] = array(
+    'title' => t('Prevent &lt;!--break--> from being stripped by mangling '),
+    'process callback' => '_breaktag_hide_break',
+  );
+  $filters['unmangle-break'] = array(
+    'title' => t('Restore mangled &lt;!--break--> tags '),
+    'process callback' => '_breaktag_fix_break',
+  );
+  return $filters;
+}
+function _breaktag_hide_break($text, $filter, $format, $langcode, $cache, $cache_id) {
+  $mangled = "[[".md5("<!--break-->")."]]";
+  $text = str_ireplace('<p><!--break--></p>', '<!--break-->', $text);
+  return str_replace('<!--break-->', $mangled, $text);
+}
+function _breaktag_fix_break($text, $filter, $format, $langcode, $cache, $cache_id) {
+  $mangled = "[[".md5("<!--break-->")."]]";
+  return str_replace($mangled,'<!--break-->', $text);
+}

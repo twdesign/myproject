@@ -4,12 +4,13 @@ package = Commerce (contrib)
 core = 7.x
 configure = admin/commerce/config/license/file
 dependencies[] = commerce_license
+dependencies[] = file
 
 files[] = includes/views/handlers/commerce_file_handler_field_download_limit.inc
 
-; Information added by drupal.org packaging script on 2013-07-25
-version = "7.x-2.0-alpha1"
+; Information added by Drupal.org packaging script on 2013-12-09
+version = "7.x-2.0-beta2"
 core = "7.x"
 project = "commerce_file"
-datestamp = "1374755468"
+datestamp = "1386590083"
 

@@ -16,8 +16,7 @@ function commerce_file_settings_form($form, &$form_state) {
   );
 
   // Create a list of licensable product types and their labels.
-  $license_product_types = variable_get('commerce_license_product_types', array());
-  $license_product_types = array_filter($license_product_types);
+  $license_product_types = commerce_license_product_types();
   $product_types = array();
   foreach (commerce_product_type_options_list() as $type => $label) {
     if (in_array($type, $license_product_types)) {
@@ -36,7 +35,7 @@ function commerce_file_settings_form($form, &$form_state) {
   $form['commerce_file_product_types'] = array(
     '#title' => t('Product types'),
     '#type' => 'checkboxes',
-    '#default_value' => commerce_file_get_product_types(),
+    '#default_value' => commerce_file_product_types(),
     '#options' => $product_types,
   );
 

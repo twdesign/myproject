@@ -75,7 +75,7 @@ function commerce_file_admin_paths() {
  */
 function commerce_file_download_page($file) {
   // Ensure there is a valid token to download this file.
-  if (!isset($_GET['token']) || !drupal_valid_token($_GET['token'], "file/$file->fid/download")) {
+  if (!isset($_GET['token']) || $_GET['token'] !== commerce_file_get_download_token($file)) {
     return MENU_ACCESS_DENIED;
   }
   // If the file does not exist it can cause problems with file_transfer().
@@ -131,10 +131,46 @@ function commerce_file_module_implements_alter(&$implementations, $hook) {
  * the need to override file_entity's download page.
  */
 function commerce_file_file_download_headers_alter(array &$headers, $file) {
+  // If the file is licensable, ensure that its download gets logged.
+  if (commerce_file_is_licensable($file)) {
+    commerce_file_set_request_file($file);
+  }
+
+  // Redirect to S3 if needed.
   if (file_uri_scheme($file->uri) == 's3') {
     $url = file_create_url($file->uri);
     drupal_goto($url);
   }
+}
+
+/**
+ * Implements hook_permission().
+ */
+function commerce_file_permission() {
+  return array(
+    'bypass license control' => array(
+      'title' => t('Bypass license control'),
+      'description' => t('Download files without having a license.'),
+      'restrict access' => TRUE,
+    ),
+  );
+}
+
+/**
+ * Checks whether the provided user is allowed to bypass license control.
+ *
+ * This allows the user to download a file without having a license.
+ * Since there's no license, download limits can't be checked and respected.
+ *
+ * @param $account
+ *   The account to check for. If not given, the current user is used instead.
+ *
+ * @return
+ *   TRUE if the account is allowed to bypass license control, FALSE
+ *   otherwise.
+ */
+function commerce_file_bypass_license_control($account = NULL) {
+  return user_access('bypass license control', $account) || user_access('administer licenses', $account);
 }
 
 /**
@@ -151,19 +187,45 @@ function commerce_file_file_entity_access($op, $file, $account) {
 }
 
 /**
- * Implements hook_file_download_access().
- *
- * This access hook is called when a private file is being accessed via the
- * system/file callback. Access to licensed files is forbidden here, to
- * ensure that the file/%file/download callback is used (which tracks
- * download counts and forces the explicit download of a file).
+ * Implements hook_file_download().
  */
-function commerce_file_file_download_access($file_item, $entity_type, $entity) {
-  if ($entity_type == 'commerce_product' && !empty($entity->commerce_file)) {
-    $commerce_file_items = field_get_items('commerce_product', $entity, 'commerce_file');
-    if (in_array($file_item, $commerce_file_items)) {
-      return FALSE;
+function commerce_file_file_download($uri) {
+  $files = file_load_multiple(array(), array('uri' => $uri));
+  if (count($files)) {
+    foreach ($files as $item) {
+      // Since some database servers sometimes use a case-insensitive comparison
+      // by default, double check that the filename is an exact match.
+      if ($item->uri === $uri) {
+        $file = $item;
+        break;
+      }
     }
+  }
+  // No file found, or a temporary file found, do nothing.
+  if (!isset($file) || $file->status != FILE_STATUS_PERMANENT) {
+    return;
+  }
+  // This file is not licensable, do nothing.
+  if (!commerce_file_is_licensable($file)) {
+    return;
+  }
+
+  $op = 'download';
+  // If we're checking access for an image derivative, check access for "view",
+  // not "download". Derivatives don't increase the download count and work
+  // even when the download limit has been reached.
+  $menu_item = menu_get_item();
+  if ($menu_item['path'] == 'system/files/styles/%') {
+    $op = 'view';
+  }
+  // Perform the access check, and bubble-up any failures.
+  if (!commerce_file_access($op, $file)) {
+    return -1;
+  }
+
+  // Ensure that the download gets logged.
+  if ($op == 'download') {
+    commerce_file_set_request_file($file);
   }
 }
 
@@ -198,8 +260,8 @@ function commerce_file_access($op, $file, $account = NULL) {
   if (!empty($_SESSION['commerce_license_uid']) && empty($account->uid)) {
     $account = user_load($_SESSION['commerce_license_uid']);
   }
-  // No need to check access for admin.
-  if (user_access('administer licenses', $account)) {
+  // No need to check access.
+  if (commerce_file_bypass_license_control($account)) {
     return TRUE;
   }
   // This file is not licensable.
@@ -250,16 +312,19 @@ function commerce_file_is_licensable($file) {
  *   The account to check for. If not given, the current user is used instead.
  *
  * @return
- *   The license if found, FALSE otherwise (indicating that the file
- *   is not licensable).
+ *   The license if found, FALSE otherwise.
  */
 function commerce_file_get_license($op, $file, $account = NULL) {
   if (!$account) {
     $account = $GLOBALS['user'];
   }
-  // Checkout complete account override for anonymous users.
+  // Checkout complete account override.
   if (!empty($_SESSION['commerce_license_uid']) && empty($account->uid)) {
     $account = user_load($_SESSION['commerce_license_uid']);
+  }
+  // Ignore anonymous users, they can't have licenses.
+  if (empty($account->uid)) {
+    return FALSE;
   }
 
   $licenses = &drupal_static(__FUNCTION__, array());
@@ -322,9 +387,13 @@ function commerce_file_get_product_license($product, $account = NULL) {
   if (!$account) {
     $account = $GLOBALS['user'];
   }
-  // Checkout complete account override for anonymous users.
+  // Checkout complete account override.
   if (!empty($_SESSION['commerce_license_uid']) && empty($account->uid)) {
     $account = user_load($_SESSION['commerce_license_uid']);
+  }
+  // Ignore anonymous users, they can't have licenses.
+  if (empty($account->uid)) {
+    return FALSE;
   }
 
   $licenses = &drupal_static(__FUNCTION__, array());
@@ -372,13 +441,9 @@ function commerce_file_can_download($license, $file, $account = NULL) {
   if (!empty($_SESSION['commerce_license_uid']) && empty($account->uid)) {
     $account = user_load($_SESSION['commerce_license_uid']);
   }
-  // The admin can always download.
-  if (user_access('administer licenses', $account)) {
+  // No need to check access.
+  if (commerce_file_bypass_license_control($account)) {
     return TRUE;
-  }
-  // This is not this user's license, and he has no admin rights.
-  if ($license->uid != $account->uid) {
-    return FALSE;
   }
 
   $enable_limit = variable_get('commerce_file_enable_download_limit', FALSE);
@@ -399,6 +464,28 @@ function commerce_file_can_download($license, $file, $account = NULL) {
   }
 
   return TRUE;
+}
+
+/**
+ * Retrieves the file currently being downloaded.
+ */
+function commerce_file_get_request_file() {
+  return commerce_file_set_request_file();
+}
+
+/**
+ * Sets the file currently being downloaded.
+ *
+ * @param $file
+ *   The file being downloaded, or NULL to return the current file instead.
+ */
+function commerce_file_set_request_file($file = NULL) {
+  $cached_file = &drupal_static(__FUNCTION__);
+  if (isset($file)) {
+    $cached_file = $file;
+  }
+
+  return $cached_file;
 }
 
 /**
@@ -491,14 +578,19 @@ function commerce_file_download_log_clear($conditions) {
  * Logs the completed file download.
  */
 function commerce_file_exit($destination = NULL) {
-  $item = menu_get_item();
+  // If access was denied after our access checks, the download never happened.
+  $status = drupal_get_http_header('Status');
+  if ($status && substr($status, 0, 3) == '403') {
+    return;
+  }
+
+  $file = commerce_file_get_request_file();
   $enable_limit = variable_get('commerce_file_enable_download_limit', FALSE);
-  if ($item['path'] == 'file/%/download' && $enable_limit) {
-    // The file is fetched from the menu item, and the license is already
-    // in the static cache for commerce_file_get_license().
-    $file = $item['page_arguments'][0];
+  if ($file && $enable_limit) {
+    // The license is already in the commerce_file_get_license() static cache.
     $license = commerce_file_get_license('download', $file);
-    if ($license) {
+    // Skip logging if the admin is downloading another user's file.
+    if ($license && $license->uid == $GLOBALS['user']->uid) {
       commerce_file_download_log_insert($license, $file);
     }
   }
@@ -511,9 +603,7 @@ function commerce_file_exit($destination = NULL) {
  * have it configured.
  */
 function commerce_file_commerce_license_types_list_alter(&$types, $product) {
-  $product_types = variable_get('commerce_file_product_types', array());
-  $product_types = array_filter($product_types);
-  if (!in_array($product->type, $product_types)) {
+  if (!empty($product) && !in_array($product->type, commerce_file_product_types())) {
     unset($types['file']);
   }
 }
@@ -524,7 +614,7 @@ function commerce_file_commerce_license_types_list_alter(&$types, $product) {
  * Ensures that products have the required commerce_file field.
  */
 function commerce_file_flush_caches() {
-  $product_types = commerce_file_get_product_types();
+  $product_types = commerce_file_product_types();
   commerce_file_configure_product_types($product_types);
 }
 
@@ -534,12 +624,11 @@ function commerce_file_flush_caches() {
  * @return
  *   An array of product type machine names.
  */
-function commerce_file_get_product_types() {
+function commerce_file_product_types() {
   $file_product_types = variable_get('commerce_file_product_types', array());
   $file_product_types = array_filter($file_product_types);
   // Return only those $file_product_types that are still licensable.
-  $license_product_types = variable_get('commerce_license_product_types', array());
-  $license_product_types = array_filter($license_product_types);
+  $license_product_types = commerce_license_product_types();
   return array_intersect($file_product_types, $license_product_types);
 }
 
@@ -585,6 +674,14 @@ function commerce_file_configure_product_types($types) {
       ),
       'widget' => array(
         'type' => 'file_generic',
+      ),
+      'display' => array(
+        'default' => array(
+          'label' => 'above',
+          'module' => 'commerce_file',
+          'type' => 'commerce_file',
+          'settings' => array(),
+        ),
       ),
     );
     field_create_instance($instance);
@@ -672,6 +769,20 @@ function commerce_file_field_formatter_settings_form($field, $instance, $view_mo
 }
 
 /**
+ * Implements hook_field_formatter_settings_summary().
+ */
+function commerce_file_field_formatter_settings_summary($field, $instance, $view_mode) {
+  $display = $instance['display'][$view_mode];
+  $show_icon = $display['settings']['show_icon'] ? t('Yes') : t('No');
+  $check_access = $display['settings']['check_access'] ? t('Yes') : t('No');
+  $summary = array();
+  $summary[] = t('Show the file icon') . ': ' . $show_icon;
+  $summary[] = t('Check access') . ': ' . $check_access;
+
+  return implode('<br />', $summary);;
+}
+
+/**
  * Implements hook_field_formatter_view().
  */
 function commerce_file_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
@@ -687,8 +798,7 @@ function commerce_file_field_formatter_view($entity_type, $entity, $field, $inst
     $license = commerce_file_get_product_license($entity);
     $access = TRUE;
     if (!empty($settings['check_access'])) {
-      // The user must either have admin privileges, or have a license.
-      $access = (user_access('administer licenses') || $license);
+      $access = ($license || commerce_file_bypass_license_control());
     }
 
     foreach ($items as $delta => $item) {
@@ -720,7 +830,7 @@ function commerce_file_field_formatter_view($entity_type, $entity, $field, $inst
 function theme_commerce_file_download_link($variables) {
   $file = $variables['file'];
   $uri = array('path' => "file/{$file->fid}/download", 'options' => array());
-  $uri['options']['query']['token'] = drupal_get_token($uri['path']);
+  $uri['options']['query']['token'] = commerce_file_get_download_token($file);
   // Set options as per anchor format described at
   // http://microformats.org/wiki/file-format-examples
   $uri['options']['attributes']['type'] = $file->filemime . '; length=' . $file->filesize;
@@ -732,8 +842,10 @@ function theme_commerce_file_download_link($variables) {
     $icon = $variables['icon'] . ' ';
   }
 
-  $can_download = FALSE;
-  if (!empty($variables['license'])) {
+  if (empty($variables['license'])) {
+    $can_download = commerce_file_bypass_license_control();
+  }
+  else {
     // The file that this theme function receives is just the filefield item
     // array converted to an object (yay, D7!). The limit download check needs
     // the actual file entity.
@@ -745,4 +857,24 @@ function theme_commerce_file_download_link($variables) {
   $output .= $can_download ? l($label, $uri['path'], $uri['options']) : $label;
   $output .= ' </span>';
   return $output;
+}
+
+/**
+ * Generate a file download CSRF token.
+ *
+ * This is essentially a duplicate of drupal_get_token, that attempts to still
+ * work if the user is anonymous, by using ip_address() as the identifier
+ * rather than session_id().
+ *
+ * Copy of file_entity_get_download_token().
+ *
+ * @param object $file
+ *   A file entity object.
+ *
+ * @return string
+ *   A CSRF token string.
+ */
+function commerce_file_get_download_token($file) {
+  $identifier = !empty($GLOBALS['user']->uid) ? session_id() : ip_address();
+  return drupal_hmac_base64("file/$file->fid/download", $identifier . drupal_get_private_key() . drupal_get_hash_salt());
 }

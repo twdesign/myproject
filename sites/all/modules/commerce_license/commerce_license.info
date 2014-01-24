@@ -11,17 +11,20 @@ dependencies[] = ctools
 dependencies[] = entity
 dependencies[] = entity_bundle_plugin
 dependencies[] = entityreference
+dependencies[] = list
+dependencies[] = number
 
 files[] = commerce_license.info.inc
+files[] = includes/commerce_license.controller.inc
 files[] = includes/commerce_license.inline_entity_form.inc
-files[] = includes/plugins/type/base.inc
+files[] = includes/plugins/license_type/base.inc
 files[] = includes/views/commerce_license.views_controller.inc
 files[] = includes/views/handlers/commerce_license_handler_field_access_details.inc
 files[] = includes/views/plugins/commerce_license_plugin_access_sync.inc
 
-; Information added by drupal.org packaging script on 2013-07-19
-version = "7.x-1.0-alpha3"
+; Information added by Drupal.org packaging script on 2014-01-16
+version = "7.x-1.1"
 core = "7.x"
 project = "commerce_license"
-datestamp = "1374258668"
+datestamp = "1389893605"
 

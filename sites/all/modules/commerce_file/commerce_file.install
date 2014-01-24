@@ -103,15 +103,6 @@ function commerce_file_install() {
     'default' => 0,
   );
   db_change_field('file_managed', 'filesize', 'filesize', $spec);
-
-  // Grant the "view any commerce_product entity" permission to all
-  // authenticated roles, since it's needed for the My Files view to work.
-  // Most installations already have this done, but doing it here explicitly
-  // ensures an easier initial setup.
-  $roles = user_roles(TRUE);
-  foreach ($roles as $rid => $name) {
-    user_role_change_permissions($rid, array('view any commerce_product entity' => TRUE));
-  }
 }
 
 /**

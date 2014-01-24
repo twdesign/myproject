@@ -1,0 +1,13 @@
+name = CacheFlush Cron
+description = "CacheFlush cron job for presets."
+package = administration
+dependencies[] = cacheflush
+dependencies[] = elysia_cron
+core = "7.x"
+
+; Information added by Drupal.org packaging script on 2014-01-06
+version = "7.x-2.2"
+core = "7.x"
+project = "cacheflush"
+datestamp = "1389024806"
+

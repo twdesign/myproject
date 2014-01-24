@@ -29,6 +29,7 @@ function commerce_file_views_default_views() {
   $handler->display->display_options['access']['perm'] = 'view own licenses';
   $handler->display->display_options['cache']['type'] = 'none';
   $handler->display->display_options['query']['type'] = 'views_query';
+  $handler->display->display_options['query']['options']['disable_sql_rewrite'] = TRUE;
   $handler->display->display_options['exposed_form']['type'] = 'basic';
   $handler->display->display_options['pager']['type'] = 'full';
   $handler->display->display_options['pager']['options']['items_per_page'] = '20';
@@ -98,7 +99,7 @@ function commerce_file_views_default_views() {
   $handler->display->display_options['relationships']['commerce_file_fid']['field'] = 'commerce_file_fid';
   $handler->display->display_options['relationships']['commerce_file_fid']['relationship'] = 'product';
   $handler->display->display_options['relationships']['commerce_file_fid']['required'] = TRUE;
-  /* Field: Commerce License: Commerce license ID */
+  /* Field: Commerce License: License ID */
   $handler->display->display_options['fields']['license_id']['id'] = 'license_id';
   $handler->display->display_options['fields']['license_id']['table'] = 'commerce_license';
   $handler->display->display_options['fields']['license_id']['field'] = 'license_id';
@@ -170,6 +171,13 @@ function commerce_file_views_default_views() {
   $handler->display->display_options['filters']['type']['value'] = array(
     'file' => 'file',
   );
+  /* Filter criterion: Commerce License: Status */
+  $handler->display->display_options['filters']['status']['id'] = 'status';
+  $handler->display->display_options['filters']['status']['table'] = 'commerce_license';
+  $handler->display->display_options['filters']['status']['field'] = 'status';
+  $handler->display->display_options['filters']['status']['value'] = array(
+    2 => '2',
+  );
 
   /* Display: Page */
   $handler = $view->new_display('page', 'Page', 'page');
@@ -179,7 +187,7 @@ function commerce_file_views_default_views() {
   $handler->display->display_options['menu']['weight'] = '0';
   $handler->display->display_options['menu']['context'] = 0;
   $handler->display->display_options['menu']['context_only_inline'] = 0;
-  $translatables['licensed_files'] = array(
+  $translatables['commerce_license_my_files'] = array(
     t('Master'),
     t('Files'),
     t('more'),

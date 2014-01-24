@@ -1,0 +1,5 @@
+name = Breaktag
+description = Custom module for to prevent teaser break tags being stripped out.
+core = 7.x
+package = Custom
+files[] = breaktag.module
