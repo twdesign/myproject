@@ -74,7 +74,7 @@ function theme_youtube_video($variables) {
     $query['showinfo'] = '0';
   }
   if ($controls) {
-    $query['controls'] = '2';
+    $query['controls'] = '1';
   }
   if ($autohide) {
     $query['autohide'] = '0';
