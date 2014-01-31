@@ -103,7 +103,7 @@ function youtube_settings_form($form) {
     '#title' => t('YouTube thumbnail directory'),
     '#field_prefix' => variable_get('file_public_path', conf_path() . '/files') . '/',
     '#field_suffix' => '/thumbnail.png',
-    '#description' => t('Location, within the files directory, where you would like the YouTube thumbnails stored.'),
+    '#description' => t('Location, within the files directory, where you would like the YouTube thumbnails to be stored.'),
     '#default_value' => variable_get('youtube_thumb_dir', 'youtube'),
   );
   $form['youtube_thumb_hires'] = array(
