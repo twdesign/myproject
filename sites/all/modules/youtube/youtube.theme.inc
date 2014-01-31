@@ -23,6 +23,7 @@ function theme_youtube_video($variables) {
   // Get YouTube settings.
   $suggest = variable_get('youtube_suggest', TRUE);
   $privacy = variable_get('youtube_privacy', FALSE);
+  $fs = variable_get('youtube_fs', TRUE);
   $modestbranding = variable_get('youtube_modestbranding', FALSE);
   $theme = variable_get('youtube_theme', FALSE);
   $color = variable_get('youtube_color', FALSE);
@@ -45,6 +46,9 @@ function theme_youtube_video($variables) {
   $query = array();
   if (!$suggest) {
     $query['rel'] = '0';
+  }
+  if ($fs) {
+    $query['fs'] = '0';
   }
   if ($modestbranding) {
     $query['modestbranding'] = '1';

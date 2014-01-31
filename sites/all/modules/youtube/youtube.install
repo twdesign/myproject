@@ -35,6 +35,7 @@ function youtube_field_schema($field) {
 function youtube_uninstall() {
   // Delete youtube variables when module is removed.
   variable_del('youtube_suggest');
+  variable_del('youtube_fs');
   variable_del('youtube_modestbranding');
   variable_del('youtube_theme');
   variable_del('youtube_color');
