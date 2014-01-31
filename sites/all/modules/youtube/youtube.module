@@ -57,7 +57,7 @@ function youtube_settings_form($form) {
   $form['youtube_global']['youtube_fs'] = array(
     '#type' => 'checkbox',
     '#title' => t('Do not show YouTube full screen button on video player.'),
-    '#default_value' => variable_get('youtube_fs', TRUE),
+    '#default_value' => variable_get('youtube_fs', FALSE),
   );
   $form['youtube_global']['youtube_modestbranding'] = array(
     '#type' => 'checkbox',
