@@ -249,7 +249,7 @@ function youtube_field_formatter_settings_form($field, $instance, $view_mode, $f
     );
     $element['youtube_autohide'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Hide video controls after play begins (autohide).'),
+      '#title' => t('Make progress bar and controls permanent (autohide).'),
       '#default_value' => $settings['youtube_autohide'],
     );
     $element['youtube_iv_load_policy'] = array(

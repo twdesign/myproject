@@ -77,7 +77,7 @@ function theme_youtube_video($variables) {
     $query['controls'] = '0';
   }
   if ($autohide) {
-    $query['autohide'] = '1';
+    $query['autohide'] = '0';
   }
   if ($iv_load_policy) {
     $query['iv_load_policy'] = '3';
