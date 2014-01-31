@@ -177,7 +177,7 @@ function youtube_field_formatter_info() {
         'youtube_height' => NULL,
         'youtube_autoplay' => FALSE,
         'youtube_showinfo' => FALSE,
-        'youtube_controls' => FALSE,
+        'youtube_controls' => TRUE,
         'youtube_autohide' => FALSE,
         'youtube_iv_load_policy' => FALSE,
       ),
@@ -244,7 +244,7 @@ function youtube_field_formatter_settings_form($field, $instance, $view_mode, $f
     );
     $element['youtube_controls'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Always hide video controls (controls).'),
+      '#title' => t('Enable video player controls (controls).'),
       '#default_value' => $settings['youtube_controls'],
     );
     $element['youtube_autohide'] = array(
@@ -359,7 +359,7 @@ function youtube_field_formatter_view($entity_type, $entity, $field, $instance, 
           '#height' => array_key_exists('youtube_height', $display['settings']) ? $display['settings']['youtube_height'] : NULL,
           '#autoplay' => array_key_exists('youtube_autoplay', $display['settings']) ? $display['settings']['youtube_autoplay'] : FALSE,
           '#showinfo' => array_key_exists('youtube_showinfo', $display['settings']) ? $display['settings']['youtube_showinfo'] : FALSE,
-          '#controls' => array_key_exists('youtube_controls', $display['settings']) ? $display['settings']['youtube_controls'] : FALSE,
+          '#controls' => array_key_exists('youtube_controls', $display['settings']) ? $display['settings']['youtube_controls'] : TRUE,
           '#autohide' => array_key_exists('youtube_autohide', $display['settings']) ? $display['settings']['youtube_autohide'] : FALSE,
           '#iv_load_policy' => array_key_exists('youtube_iv_load_policy', $display['settings']) ? $display['settings']['youtube_iv_load_policy'] : FALSE,
         );
@@ -497,7 +497,7 @@ function youtube_theme($existing, $type, $theme, $path) {
         'height' => NULL,
         'autoplay' => FALSE,
         'showinfo' => FALSE,
-        'controls' => FALSE,
+        'controls' => TRUE,
         'autohide' => FALSE,
         'iv_load_policy' => FALSE,
       ),
