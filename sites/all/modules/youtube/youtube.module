@@ -543,6 +543,9 @@ function youtube_update_7004() {
     'not null' => FALSE,
   );
   db_add_field('field_data_field_youtube_video', 'field_youtube_video_start', $spec1);
+  db_add_field('field_revision_field_youtube_video', 'field_youtube_video_start', $spec1);
+  
+  
   // Add end field to field_data_field_youtube_video table
   $spec2 = array(
     'type' => 'varchar',
@@ -550,4 +553,5 @@ function youtube_update_7004() {
     'not null' => FALSE,
   );
   db_add_field('field_data_field_youtube_video', 'field_youtube_video_end', $spec2);
+  db_add_field('field_revision_field_youtube_video', 'field_youtube_video_end', $spec2);
 }
