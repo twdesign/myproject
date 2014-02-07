@@ -19,6 +19,16 @@ function youtube_field_schema($field) {
       'length' => 15,
       'not null' => FALSE,
     ),
+	'start' => array(
+      'type' => 'varchar',
+      'length' => 15,
+      'not null' => FALSE,
+    ),
+	'end' => array(
+      'type' => 'varchar',
+      'length' => 15,
+      'not null' => FALSE,
+    ),
   );
   $indexes = array(
     'video_id' => array('video_id'),
@@ -45,4 +55,6 @@ function youtube_uninstall() {
   variable_del('youtube_thumb_dir');
   variable_del('youtube_thumb_hires');
   variable_del('youtube_wmode');
+  variable_del('youtube_start');
+  variable_del('youtube_end');
 }

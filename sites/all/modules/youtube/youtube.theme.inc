@@ -29,8 +29,12 @@ function theme_youtube_video($variables) {
   $color = variable_get('youtube_color', FALSE);
   $enablejsapi = variable_get('youtube_enablejsapi', FALSE);
   $wmode = variable_get('youtube_wmode', TRUE);
+  $start = variable_get('youtube_start', TRUE);
+  $end = variable_get('youtube_end', TRUE);
   $privacy = variable_get('youtube_privacy', FALSE);
   $dimensions = youtube_get_dimensions($size, $width, $height);
+  $custom_start = 60;
+  $custom_end = 240;
 
   if ($enablejsapi) {
     $playerid = variable_get('youtube_playerid', 'youtube-field-player');
@@ -66,6 +70,12 @@ function theme_youtube_video($variables) {
   }
   if ($wmode) {
     $query['wmode'] = 'opaque';
+  }
+  if ($start) {
+    $query['start'] = $custom_start;
+  }
+  if ($end) {
+    $query['end'] = $custom_end;
   }
   if ($autoplay) {
     $query['autoplay'] = '1';

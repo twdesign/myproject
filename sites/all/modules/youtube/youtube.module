@@ -97,6 +97,18 @@ function youtube_settings_form($form) {
     '#default_value' => variable_get('youtube_wmode', TRUE),
     '#description' => t('Checking this will fix the issue of a YouTube video showing above elements with fixed or absolute positioning (including Drupal\'s Overlay and Toolbar).'),
   );
+  $form['youtube_global']['youtube_start'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('start the video at an arbitrary point'),
+    '#default_value' => variable_get('youtube_start', TRUE),
+    '#description' => t('check this box to start vid at 120 seconds point'),
+  );
+  $form['youtube_global']['youtube_end'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('stop the video at an arbitrary point'),
+    '#default_value' => variable_get('youtube_end', TRUE),
+    '#description' => t('check this box to stop vid at 180 seconds point'),
+  );
   $form['youtube_privacy'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable privacy-enhanced mode.'),
@@ -439,12 +451,29 @@ function youtube_field_widget_form(&$form, &$form_state, $field, $instance, $lan
 
   if (isset($items[$delta]['video_id'])) {
     $video_id_element = array(
-      '#markup' => '<div class="youtube-video-id">' . t('YouTube video ID: ') . $items[$delta]['video_id'] . '</div>',
+      //'#markup' => '<div class="youtube-video-id">' . t('YouTube video ID: ') . $items[$delta]['video_id'] . '</div>',
     );
     $return['video_id'] = $video_id_element;
   }
 
   return $return;
+}
+
+function youtube_field_widget_form_alter(&$element, &$form_state, $context) {
+  $main_widget = array();
+  switch ($context['field']['type'] == 'youtube') {
+  case 'youtube_field_video_widget':
+    $main_widget = $element + array(
+      '#type' => 'textfield',
+	  //'#default_value' => '0',
+      '#size' => 10,
+      '#maxlength' => 10,
+	  '#description' => t('Start Time (secs)'),
+  	);    
+    break;
+  }
+  $element['value'] = $main_widget;
+  return $element;
 }
 
 /**
@@ -504,4 +533,21 @@ function youtube_theme($existing, $type, $theme, $path) {
       'file' => 'youtube.theme.inc',
     ),
   );
+}
+
+function youtube_update_7004() {
+  // Add start field to field_data_field_youtube_video table
+  $spec1 = array(
+    'type' => 'varchar',
+    'length' => '15',
+    'not null' => FALSE,
+  );
+  db_add_field('field_data_field_youtube_video', 'field_youtube_video_start', $spec1);
+  // Add end field to field_data_field_youtube_video table
+  $spec2 = array(
+    'type' => 'varchar',
+    'length' => '15',
+    'not null' => FALSE,
+  );
+  db_add_field('field_data_field_youtube_video', 'field_youtube_video_end', $spec2);
 }
