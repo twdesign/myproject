@@ -145,6 +145,18 @@ function youtube_field_info() {
       'default_widget' => 'youtube',
       'default_formatter' => 'youtube_video',
     ),
+	// Which is called start
+    'start' => array( 
+    // Name of our type will be 'Te(x/s)t field'.
+      'label' => t('Te(x/s)t field'), 
+    // Description of our type.
+      'description' => t('sample text field'), 
+    // Standart widget that will be dispalyed at once.
+    // after that we choose field type
+      'default_widget' => 'youtube',                       
+    // Standart that will be dispayed right after we choose field type.
+      'default_formatter' => 'text_default', 
+    ), 
   );
 }
 
@@ -423,6 +435,10 @@ function youtube_field_widget_info() {
       'label' => t('YouTube'),
       'field types' => array('youtube'),
     ),
+	'start' => array(
+      'label' => t('Start'),
+      'field types' => array('text_default'),
+    ),
   );
 }
 
@@ -430,7 +446,9 @@ function youtube_field_widget_info() {
  * Implements hook_field_widget_form().
  */
 function youtube_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
+  $dude = 'jeffrey';
   $value = isset($items[$delta]['input']) ? $items[$delta]['input'] : '';
+  $value2 = isset($items[$delta]['start']) ? $items[$delta]['start'] : $dude;
 
   $element += array(
     '#type' => 'textfield',
@@ -440,41 +458,54 @@ function youtube_field_widget_form(&$form, &$form_state, $field, $instance, $lan
     '#element_validate' => array('youtube_input_validate'),
     //'#value_callback' => 'youtube_widget_value',
   );
-
+  
   // Add our own description if one is not provided by the UI.
   if ($element['#description'] == '') {
     $element['#description'] = t('Enter the YouTube URL. Valid URL formats
       include: http://www.youtube.com/watch?v=1SqBdS0XkV4 and
       http://youtu.be/1SqBdS0XkV4');
   }
+    
   $return = array('input' => $element);
-
-  if (isset($items[$delta]['video_id'])) {
-    $video_id_element = array(
+  
+  //if (isset($items[$delta]['video_id'])) {
+    //$video_id_element = array(
       //'#markup' => '<div class="youtube-video-id">' . t('YouTube video ID: ') . $items[$delta]['video_id'] . '</div>',
+    //);
+    //$return['video_id'] = $video_id_element;
+  //}
+  
+  if (isset($items[$delta]['start'])) {
+    $start_element = array(
+    //'#markup' => '<break><div class="youtube-video-id">' . t('We start here: ') . '</div>',
+	'#description' => t('Start Time (secs)'),
+	'#type' => 'textfield',
+    '#default_value' => $value2,
+    '#size' => 30,
+    '#maxlength' => 1024,
     );
-    $return['video_id'] = $video_id_element;
+    $return['start'] = $start_element;
   }
-
+  
   return $return;
 }
 
-function youtube_field_widget_form_alter(&$element, &$form_state, $context) {
-  $main_widget = array();
-  switch ($context['field']['type'] == 'youtube') {
-  case 'youtube_field_video_widget':
-    $main_widget = $element + array(
-      '#type' => 'textfield',
+//function youtube_field_widget_form_alter(&$element, &$form_state, $context) {
+  //$main_widget = array();
+  //switch ($context['field']['type'] == 'youtube') {
+  //case 'youtube_field_video_widget':
+    //$main_widget = $element + array(
+      //'#type' => 'textfield',
 	  //'#default_value' => '0',
-      '#size' => 10,
-      '#maxlength' => 10,
-	  '#description' => t('Start Time (secs)'),
-  	);    
-    break;
-  }
-  $element['value'] = $main_widget;
-  return $element;
-}
+      //'#size' => 10,
+      //'#maxlength' => 10,
+	  //'#description' => t('Start Time (secs)'),
+  	//);    
+    //break;
+  //}
+  //$element['value'] = $main_widget;
+  //return $element;
+//}
 
 /**
  * Validation for the youtube field itself.
@@ -536,7 +567,7 @@ function youtube_theme($existing, $type, $theme, $path) {
 }
 
 function youtube_update_7004() {
-  // Add start field to field_data_field_youtube_video table
+  // Add "start" field to field_data_field_youtube_video table
   $spec1 = array(
     'type' => 'varchar',
     'length' => '15',
@@ -546,7 +577,7 @@ function youtube_update_7004() {
   db_add_field('field_revision_field_youtube_video', 'field_youtube_video_start', $spec1);
   
   
-  // Add end field to field_data_field_youtube_video table
+  // Add "end" field to field_data_field_youtube_video table
   $spec2 = array(
     'type' => 'varchar',
     'length' => '15',
