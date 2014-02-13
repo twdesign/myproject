@@ -7,10 +7,27 @@
 /**
 * * Get the start time for videos
 */
-function theme_youtube_video_start_time($id){
-    $result=db_query("SELECT field_youtube_video_start FROM field_data_field_youtube_video WHERE field_youtube_video_video_id=:vidid",array( ':vidid' => $id,));
-    $val = $result->fetchField(0);
-    return $val;
+function theme_youtube_start_time($id){
+    $query = db_select('field_data_field_youtube_video', 'n')
+	->fields('n', array('field_youtube_video_start'))
+	->condition('field_youtube_video_video_id', $id) //matches youtube vid id
+	->execute();
+    $result=db_query($query);
+    $start_point = $result->fetchColumn(0);
+    return $start_point;
+}
+
+/**
+* * Get the end time for videos
+*/
+function theme_youtube_end_time($id){
+    $query = db_select('field_data_field_youtube_video', 'n')
+	->fields('n', array('field_youtube_video_end'))
+	->condition('field_youtube_video_video_id', $id) //matches youtube vid id
+	->execute();
+    $result=db_query($query);
+    $end_point = $result->fetchColumn(0);
+    return $end_point;
 }
 
 /**
@@ -18,8 +35,7 @@ function theme_youtube_video_start_time($id){
  */
 function theme_youtube_video($variables) {
   $id = $variables['video_id'];
-  $my_start_time = theme_youtube_video_start_time($id);
-  drupal_set_message('<pre>'. print_r($variables, TRUE) .'</pre>');
+  //drupal_set_message('<pre>'. print_r($variables, TRUE) .'</pre>');
 
   // Get field display settings.
   $size = $variables['size'];
@@ -44,8 +60,8 @@ function theme_youtube_video($variables) {
   $end = variable_get('youtube_end', TRUE);
   $privacy = variable_get('youtube_privacy', FALSE);
   $dimensions = youtube_get_dimensions($size, $width, $height);
-  $custom_start = 60;
-  $custom_end = 240;
+  $custom_start = theme_youtube_start_time($id);
+  $custom_end = theme_youtube_end_time($id);
 
   if ($enablejsapi) {
     $playerid = variable_get('youtube_playerid', 'youtube-field-player');
@@ -118,7 +134,7 @@ function theme_youtube_video($variables) {
     $output = '<div class="youtube-container--responsive">' . $output . '</div>';
   }
   
-  $output = $output.'<div>'. $my_start_time . '</div>';
+  $output = $output.'<div>'. $custom_start . '</div><div>' . $custom_end . '</div>';
 
   return $output;
 }
