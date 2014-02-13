@@ -31,6 +31,20 @@ function theme_youtube_end_time($id){
 }
 
 /**
+* Convert seconds to minutes and seconds
+*/
+function theme_youtube_mins_secs($secs){
+$seconds = $secs;
+$minutes = floor($seconds/60);
+$secondsleft = $seconds%60;
+if($minutes<10)
+    $minutes = "0" . $minutes;
+if($secondsleft<10)
+    $secondsleft = "0" . $secondsleft;
+return "$minutes:$secondsleft";
+} 
+
+/**
  * Theme function for videos.
  */
 function theme_youtube_video($variables) {
@@ -60,8 +74,10 @@ function theme_youtube_video($variables) {
   $end = variable_get('youtube_end', TRUE);
   $privacy = variable_get('youtube_privacy', FALSE);
   $dimensions = youtube_get_dimensions($size, $width, $height);
-  $custom_start = theme_youtube_start_time($id);
-  $custom_end = theme_youtube_end_time($id);
+  $custom_start = theme_youtube_start_time($id);//returns start time in secs
+  $custom_end = theme_youtube_end_time($id);//returns end time in secs
+  $custom_start_nice_format = theme_youtube_mins_secs($custom_start);// converts time to 0:00 format same as youtube player
+  $custom_end_nice_format = theme_youtube_mins_secs($custom_end);// converts time to 0:00 format same as youtube player
 
   if ($enablejsapi) {
     $playerid = variable_get('youtube_playerid', 'youtube-field-player');
@@ -134,7 +150,7 @@ function theme_youtube_video($variables) {
     $output = '<div class="youtube-container--responsive">' . $output . '</div>';
   }
   
-  $output = $output.'<div>'. $custom_start . '</div><div>' . $custom_end . '</div>';
+  $output = $output.'<div>'. $custom_start_nice_format . '</div><div>' . $custom_end_nice_format . '</div>';
 
   return $output;
 }

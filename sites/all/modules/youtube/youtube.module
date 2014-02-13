@@ -156,7 +156,19 @@ function youtube_field_info() {
       'default_widget' => 'youtube',                       
     // Standart that will be dispayed right after we choose field type.
       'default_formatter' => 'text_default', 
-    ), 
+    ),
+	// Which is called end
+    'end' => array( 
+    // Name of our type will be 'Te(x/s)t field'.
+      'label' => t('Te(x/s)t field'), 
+    // Description of our type.
+      'description' => t('sample text field'), 
+    // Standart widget that will be dispalyed at once.
+    // after that we choose field type
+      'default_widget' => 'youtube',                       
+    // Standart that will be dispayed right after we choose field type.
+      'default_formatter' => 'text_default', 
+    ),  
   );
 }
 
@@ -440,6 +452,10 @@ function youtube_field_widget_info() {
       'label' => t('Start'),
       'field types' => array('text_default'),
     ),
+	'end' => array(
+      'label' => t('End'),
+      'field types' => array('text_default'),
+    ),
   );
 }
 
@@ -449,9 +465,11 @@ function youtube_field_widget_info() {
 function youtube_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
   $value = isset($items[$delta]['input']) ? $items[$delta]['input'] : '';
   $value2 = isset($items[$delta]['start']) ? $items[$delta]['start'] : '';
+  $value3 = isset($items[$delta]['end']) ? $items[$delta]['end'] : '';
 
   $element = array(
-    '#type' => 'textfield',
+    '#title' => t('YouTube Video Exercise'),
+	'#type' => 'textfield',
     '#default_value' => $value,
     '#size' => 60,
     '#maxlength' => 1024,
@@ -490,10 +508,20 @@ function youtube_field_widget_form(&$form, &$form_state, $field, $instance, $lan
 	'#description' => t('Start Time (secs)'),
 	'#type' => 'textfield',
     '#default_value' => $value2,
-    '#size' => 30,
-    '#maxlength' => 1024,
+    '#size' => 5,
+    '#maxlength' => 4,
     );
     $return['start'] = $start_element;
+	
+	$end_element = array(
+    //'#markup' => '<break><div class="youtube-video-id">' . t('We start here: ') . '</div>',
+	'#description' => t('End Time (secs)'),
+	'#type' => 'textfield',
+    '#default_value' => $value3,
+    '#size' => 5,
+    '#maxlength' => 4,
+    );
+    $return['end'] = $end_element;
   //}
   
   return $return;
