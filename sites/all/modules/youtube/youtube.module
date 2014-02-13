@@ -510,6 +510,7 @@ function youtube_field_widget_form(&$form, &$form_state, $field, $instance, $lan
     '#default_value' => $value2,
     '#size' => 5,
     '#maxlength' => 4,
+	'#required' => TRUE,
     );
     $return['start'] = $start_element;
 	
@@ -520,6 +521,7 @@ function youtube_field_widget_form(&$form, &$form_state, $field, $instance, $lan
     '#default_value' => $value3,
     '#size' => 5,
     '#maxlength' => 4,
+	'#required' => TRUE,
     );
     $return['end'] = $end_element;
   //}
