@@ -5,10 +5,21 @@
  */
 
 /**
+* * Get the start time for videos
+*/
+function theme_youtube_video_start_time($id){
+    $result=db_query("SELECT field_youtube_video_start FROM field_data_field_youtube_video WHERE field_youtube_video_video_id=:vidid",array( ':vidid' => $id,));
+    $val = $result->fetchField(0);
+    return $val;
+}
+
+/**
  * Theme function for videos.
  */
 function theme_youtube_video($variables) {
   $id = $variables['video_id'];
+  $my_start_time = theme_youtube_video_start_time($id);
+  drupal_set_message('<pre>'. print_r($variables, TRUE) .'</pre>');
 
   // Get field display settings.
   $size = $variables['size'];
@@ -106,6 +117,8 @@ function theme_youtube_video($variables) {
   if ($size == 'responsive') {
     $output = '<div class="youtube-container--responsive">' . $output . '</div>';
   }
+  
+  $output = $output.'<div>'. $my_start_time . '</div>';
 
   return $output;
 }
@@ -117,7 +130,7 @@ function theme_youtube_video($variables) {
 function theme_youtube_thumbnail($variables) {
   $id = $variables['video_id'];
   $style = $variables['image_style'];
-
+  
   // Get YouTube settings - TODO is this needed?
   $size = variable_get('youtube_size', '420x315');
   $dimensions = youtube_get_dimensions($size);

@@ -172,7 +172,7 @@ function youtube_field_validate($entity_type, $entity, $field, $instance, $langc
       if (!$video_id) {
         $errors[$field['field_name']][$langcode][$delta][] = array(
           'error' => 'youtube_invalid',
-          'message' => t('Please provide a valid YouTube URL.'),
+          'message' => t('Please provide a valid YouTube URL in the format https://www.youtube.com/watch?v=LpSaGyhARoA'),
         );
       }
     }
@@ -378,6 +378,7 @@ function youtube_field_formatter_view($entity_type, $entity, $field, $instance, 
         $element[$delta] = array(
           '#theme' => 'youtube_video',
           '#video_id' => $item['video_id'],
+		  //'#video_start' => $item['video_start'],
           '#size' => array_key_exists('youtube_size', $display['settings']) ? $display['settings']['youtube_size']: NULL,
           '#width' => array_key_exists('youtube_width', $display['settings']) ? $display['settings']['youtube_width'] : NULL,
           '#height' => array_key_exists('youtube_height', $display['settings']) ? $display['settings']['youtube_height'] : NULL,
@@ -446,28 +447,36 @@ function youtube_field_widget_info() {
  * Implements hook_field_widget_form().
  */
 function youtube_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
-  $dude = 'jeffrey';
   $value = isset($items[$delta]['input']) ? $items[$delta]['input'] : '';
-  $value2 = isset($items[$delta]['start']) ? $items[$delta]['start'] : $dude;
+  $value2 = isset($items[$delta]['start']) ? $items[$delta]['start'] : '';
 
-  $element += array(
+  $element = array(
     '#type' => 'textfield',
     '#default_value' => $value,
     '#size' => 60,
     '#maxlength' => 1024,
     '#element_validate' => array('youtube_input_validate'),
     //'#value_callback' => 'youtube_widget_value',
+	'#description' => 'Enter the YouTube URL in the format https://www.youtube.com/watch?v=LpSaGyhARoA',
   );
   
   // Add our own description if one is not provided by the UI.
-  if ($element['#description'] == '') {
-    $element['#description'] = t('Enter the YouTube URL. Valid URL formats
-      include: http://www.youtube.com/watch?v=1SqBdS0XkV4 and
-      http://youtu.be/1SqBdS0XkV4');
-  }
-    
-  $return = array('input' => $element);
+  //if ($element['#description'] == '') {
+    //$element['#description'] = t('Enter the YouTube URL. Valid URL formats
+      //include: http://www.youtube.com/watch?v=1SqBdS0XkV4 and
+      //http://youtu.be/1SqBdS0XkV4');
+  //}
   
+  //$element += array(
+      //'#type' => 'textfield',
+	  //'#default_value' => $value2,
+      //'#size' => 10,
+      //'#maxlength' => 10,
+	  //'#description' => t('My Start Time (secs)'),
+  	//);    
+    
+  $return['input'] = $element;
+    
   //if (isset($items[$delta]['video_id'])) {
     //$video_id_element = array(
       //'#markup' => '<div class="youtube-video-id">' . t('YouTube video ID: ') . $items[$delta]['video_id'] . '</div>',
@@ -475,7 +484,7 @@ function youtube_field_widget_form(&$form, &$form_state, $field, $instance, $lan
     //$return['video_id'] = $video_id_element;
   //}
   
-  if (isset($items[$delta]['start'])) {
+  //if (isset($items[$delta]['start'])) {
     $start_element = array(
     //'#markup' => '<break><div class="youtube-video-id">' . t('We start here: ') . '</div>',
 	'#description' => t('Start Time (secs)'),
@@ -485,7 +494,7 @@ function youtube_field_widget_form(&$form, &$form_state, $field, $instance, $lan
     '#maxlength' => 1024,
     );
     $return['start'] = $start_element;
-  }
+  //}
   
   return $return;
 }
