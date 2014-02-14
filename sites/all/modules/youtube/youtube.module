@@ -177,6 +177,7 @@ function youtube_field_info() {
  */
 function youtube_field_validate($entity_type, $entity, $field, $instance, $langcode, $items, &$errors) {
   foreach ($items as $delta => $item) {
+  //drupal_set_message('<pre>'. print_r($items, TRUE) .'</pre>');
     if (!empty($item['input'])) {
 
       $video_id = youtube_get_video_id($item['input']);
@@ -187,7 +188,22 @@ function youtube_field_validate($entity_type, $entity, $field, $instance, $langc
           'message' => t('Please provide a valid YouTube URL in the format https://www.youtube.com/watch?v=LpSaGyhARoA'),
         );
       }
-    }
+	  
+	  //if (empty($items['start'])) {
+	  	//$errors[$field['field_name']][$langcode][$delta][] = array(
+		  //'error' => 'no_start',
+          //'message2' => t('Please provide a start time.'),
+		//);
+	  //}
+	  
+	  //if (empty($items['end'])) {
+	  	//$errors[$field['field_name']][$langcode][$delta][] = array(
+		  //'error' => 'no_end',
+          //'message' => t('Please provide an end time.'),
+		//);
+	  //}
+	  
+	} 
   }
 }
 
@@ -195,7 +211,7 @@ function youtube_field_validate($entity_type, $entity, $field, $instance, $langc
  * Implements hook_field_is_empty().
  */
 function youtube_field_is_empty($item, $field) {
-  return empty($item['input']);
+    return empty($item['input']);
 }
 
 /**
@@ -390,8 +406,7 @@ function youtube_field_formatter_view($entity_type, $entity, $field, $instance, 
         $element[$delta] = array(
           '#theme' => 'youtube_video',
           '#video_id' => $item['video_id'],
-		  //'#video_start' => $item['video_start'],
-          '#size' => array_key_exists('youtube_size', $display['settings']) ? $display['settings']['youtube_size']: NULL,
+		  '#size' => array_key_exists('youtube_size', $display['settings']) ? $display['settings']['youtube_size']: NULL,
           '#width' => array_key_exists('youtube_width', $display['settings']) ? $display['settings']['youtube_width'] : NULL,
           '#height' => array_key_exists('youtube_height', $display['settings']) ? $display['settings']['youtube_height'] : NULL,
           '#autoplay' => array_key_exists('youtube_autoplay', $display['settings']) ? $display['settings']['youtube_autoplay'] : FALSE,
@@ -476,6 +491,7 @@ function youtube_field_widget_form(&$form, &$form_state, $field, $instance, $lan
     '#element_validate' => array('youtube_input_validate'),
     //'#value_callback' => 'youtube_widget_value',
 	'#description' => 'Enter the YouTube URL in the format https://www.youtube.com/watch?v=LpSaGyhARoA',
+	'#required' => TRUE,
   );
   
   // Add our own description if one is not provided by the UI.
@@ -505,7 +521,8 @@ function youtube_field_widget_form(&$form, &$form_state, $field, $instance, $lan
   //if (isset($items[$delta]['start'])) {
     $start_element = array(
     //'#markup' => '<break><div class="youtube-video-id">' . t('We start here: ') . '</div>',
-	'#description' => t('Start Time (secs)'),
+	'#title' => t('Start Time'),//necessary for required fields otherwise no error message displayed
+	'#description' => t('Enter the starting point for the video (secs)'),
 	'#type' => 'textfield',
     '#default_value' => $value2,
     '#size' => 5,
@@ -516,7 +533,8 @@ function youtube_field_widget_form(&$form, &$form_state, $field, $instance, $lan
 	
 	$end_element = array(
     //'#markup' => '<break><div class="youtube-video-id">' . t('We start here: ') . '</div>',
-	'#description' => t('End Time (secs)'),
+	'#title' => t('End Time'),//necessary for required fields otherwise no error message displayed
+	'#description' => t('Enter the ending point for the video (secs)'),
 	'#type' => 'textfield',
     '#default_value' => $value3,
     '#size' => 5,
@@ -563,6 +581,22 @@ function youtube_input_validate($element, &$form_state, $form) {
     form_set_value($video_id_element, $video_id, $form_state);
   }
 }
+
+function youtube_time_validate($form, &$form_state) {
+//drupal_set_message('<pre>'. print_r($form_state['values']['field_youtube_video']['und'][0]['start'], TRUE) .'</pre>');
+  $beginner = $form_state['values']['field_youtube_video']['und'][0]['start'];
+  $beginner_integer = intval($beginner);
+  if ($beginner_integer>30) {
+    form_set_error('beginner', t('Enter a bigger number for begin time'));
+  }
+}
+
+function youtube_form_alter(&$form, &$form_state, $form_id){
+	if (isset($form['#node_edit_form']) &&  $form['#node_edit_form'] == TRUE) {
+    $form['#validate'][] = 'youtube_time_validate';
+  }
+}
+
 
 /**
  * Implements hook_field_widget_error().
