@@ -150,7 +150,10 @@ function theme_youtube_video($variables) {
     $output = '<div class="youtube-container--responsive">' . $output . '</div>';
   }
   
-  $output = $output.'<div>Start Time: '. $custom_start_nice_format . '</div><div>End Time : ' . $custom_end_nice_format . '</div>';
+  $show_start = ($start) ? '<div>Start Time: ' . $custom_start_nice_format. '</div>' : '';
+  $show_end = ($end) ? '<div>End Time : ' . $custom_end_nice_format . '</div>' : '';
+    
+  $output = $output . $show_start .  $show_end;
 
   return $output;
 }
