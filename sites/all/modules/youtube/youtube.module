@@ -584,10 +584,14 @@ function youtube_input_validate($element, &$form_state, $form) {
 
 function youtube_time_validate($form, &$form_state) {
 //drupal_set_message('<pre>'. print_r($form_state['values']['field_youtube_video']['und'][0]['start'], TRUE) .'</pre>');
-  $beginner = $form_state['values']['field_youtube_video']['und'][0]['start'];
-  $beginner_integer = intval($beginner);
-  if ($beginner_integer>30) {
-    form_set_error('beginner', t('Enter a bigger number for begin time'));
+  $starting = intval($form_state['values']['field_youtube_video']['und'][0]['start']);
+  $ending = intval($form_state['values']['field_youtube_video']['und'][0]['end']);
+  //$beginner_integer = intval($beginner);
+  if (($ending-$starting)>60) {
+    form_set_error('vid_too_long', t('Youtube video start to end time must be one minute or less.'));
+  }
+  if (($ending-$starting)<6) {
+    form_set_error('vid_too_short', t('Youtube video start to end time must be longer than 5 seconds.'));
   }
 }
 
